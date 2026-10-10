@@ -56,4 +56,4 @@ Never commit `.env` files, database passwords, JWT secrets, or API keys.
 Full-Stack Software Developer
 ## Dashboard Preview
 
-![LogiMind AI Dashboard](screenshots/dashboard.png)
+![LogiMind AI Dashboard](screenshots/Dashboard.png)
