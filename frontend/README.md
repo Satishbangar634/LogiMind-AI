@@ -1,58 +1,75 @@
-# LogiMind AI 🚚
+# React + TypeScript + Vite
 
-**AI-Powered Logistics & Route Optimization Platform**
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-LogiMind AI is a full-stack web application designed to simplify logistics operations through order management, vehicle management, route optimization, simulation, and analytics.
+Currently, two official plugins are available:
 
-## Features
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- **Dashboard:** View logistics analytics and operational metrics.
-- **Order Management:** Monitor orders, quantities, priorities, and delivery dates.
-- **Vehicle Management:** Manage vehicle details, capacity, and availability.
-- **Location Management:** Manage warehouses and distribution locations.
-- **Trip Management:** Track trips, routes, and delivery status.
-- **Route Optimization:** Calculate route distance and estimated duration using OSRM.
-- **What-if Simulation:** Evaluate vehicle capacity and load utilization.
-- **Scenario Comparison:** Compare two logistics scenarios.
-- **Logistics Insights:** Generate insights from current operational data.
-- **AI Assistant:** Ask questions about orders, vehicles, and trips.
+## React Compiler
 
-## Technology Stack
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-**Frontend:** React, TypeScript, Vite, Tailwind CSS, Axios, Recharts, Leaflet
+## Expanding the ESLint configuration
 
-**Backend:** Node.js, Express.js, TypeScript, JWT
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-**Database:** PostgreSQL
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-**Routing:** OSRM and OpenStreetMap
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-**AI Integration:** OpenAI API
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 
-## Run Locally
-
-### Start the Backend
-
-```bash
-cd backend
-npm install
-npm run dev
 ```
 
-### Start the Frontend
+You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
 
-Open a separate terminal:
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-```bash
-cd frontend
-npm install
-npm run dev
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+
 ```
-
-Configure the PostgreSQL database and backend environment variables in `backend/.env` before starting the application.
-
-**Security:** Never upload `.env` files, database passwords, or API keys to GitHub.
-
-## Developer
-
-Satish Bangar — Full-Stack Software Developer
