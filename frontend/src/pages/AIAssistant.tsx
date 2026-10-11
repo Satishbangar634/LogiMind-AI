@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import axios from 'axios'
 
 interface ChatMessage {
@@ -14,9 +15,7 @@ const AIAssistant = () => {
   const askAssistant = async () => {
     const message = input.trim()
 
-    if (!message || loading) {
-      return
-    }
+    if (!message || loading) return
 
     const token = localStorage.getItem('token')
 
@@ -31,23 +30,14 @@ const AIAssistant = () => {
       return
     }
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: 'user',
-        content: message,
-      },
-    ])
-
+    setMessages((prev) => [...prev, { role: 'user', content: message }])
     setInput('')
     setLoading(true)
 
     try {
       const response = await axios.post(
         'http://localhost:5000/api/ai/ask',
-        {
-          message,
-        },
+        { message },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -60,94 +50,100 @@ const AIAssistant = () => {
         ...prev,
         {
           role: 'assistant',
-          content:
-            response.data.message || 'No response received.',
+          content: response.data.message || 'No response received.',
         },
       ])
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('AI Assistant error:', error)
+
+      let errorMessage = 'AI Assistant is currently unavailable.'
+
+      if (axios.isAxiosError(error)) {
+        errorMessage =
+          error.response?.data?.message || errorMessage
+      }
 
       setMessages((prev) => [
         ...prev,
-        {
-          role: 'assistant',
-          content:
-            error.response?.data?.message ||
-            'AI Assistant is currently unavailable.',
-        },
+        { role: 'assistant', content: errorMessage },
       ])
     } finally {
       setLoading(false)
     }
   }
 
-  const handleKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (event.key === 'Enter') {
-      askAssistant()
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      void askAssistant()
     }
   }
 
   const clearChat = () => {
     setMessages([])
+    setInput('')
   }
 
-  return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto flex min-h-screen max-w-5xl flex-col px-6 py-8">
+  const suggestedQuestions = [
+    'How many orders do we have?',
+    'Which vehicles are available?',
+    'Tell me about current trips.',
+    'What is our total order quantity?',
+  ]
 
+  return (
+    <div className="min-h-full bg-slate-50 text-slate-900">
+      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-6xl flex-col px-4 py-5 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <header className="mb-6 flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
               LogiMind AI
             </h1>
-
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-slate-600">
               Intelligent Logistics Assistant
             </p>
           </div>
 
           {messages.length > 0 && (
             <button
+              type="button"
               onClick={clearChat}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               Clear Chat
             </button>
           )}
-        </div>
+        </header>
 
         {/* Chat Area */}
-        <div className="flex-1 rounded-2xl border border-slate-800 bg-slate-900 p-6">
-
+        <section
+          aria-label="AI conversation"
+          aria-live="polite"
+          className="flex min-h-[400px] flex-1 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:min-h-[480px] sm:p-6"
+        >
           {messages.length === 0 ? (
-            <div className="flex h-full min-h-[500px] flex-col items-center justify-center text-center">
-              <div className="mb-4 text-5xl">
+            <div className="flex flex-1 flex-col items-center justify-center py-10 text-center">
+              <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-4xl">
                 🤖
               </div>
 
-              <h2 className="text-2xl font-semibold">
+              <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
                 How can I help?
               </h2>
 
-              <p className="mt-2 max-w-md text-slate-400">
-                Ask questions about orders, vehicles, trips,
-                quantities and logistics operations.
+              <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
+                Ask questions about orders, vehicles, trips, quantities
+                and logistics operations.
               </p>
 
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                {[
-                  'How many orders do we have?',
-                  'Which vehicles are available?',
-                  'Tell me about current trips.',
-                  'What is our total order quantity?',
-                ].map((question) => (
+              <div className="mt-6 grid w-full max-w-2xl gap-3 sm:grid-cols-2">
+                {suggestedQuestions.map((question) => (
                   <button
                     key={question}
+                    type="button"
                     onClick={() => setInput(question)}
-                    className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-left text-sm text-slate-300 transition hover:border-slate-500 hover:bg-slate-700"
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     {question}
                   </button>
@@ -155,10 +151,10 @@ const AIAssistant = () => {
               </div>
             </div>
           ) : (
-            <div className="max-h-[600px] space-y-5 overflow-y-auto pr-2">
+            <div className="flex max-h-[600px] flex-1 flex-col gap-5 overflow-y-auto p-1">
               {messages.map((message, index) => (
                 <div
-                  key={index}
+                  key={`${index}-${message.role}`}
                   className={`flex ${
                     message.role === 'user'
                       ? 'justify-end'
@@ -166,19 +162,23 @@ const AIAssistant = () => {
                   }`}
                 >
                   <div
-                    className={`max-w-[80%] rounded-2xl px-5 py-3 ${
+                    className={`max-w-[90%] rounded-2xl px-4 py-3 sm:max-w-[80%] sm:px-5 ${
                       message.role === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-800 text-slate-200'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'border border-slate-200 bg-slate-100 text-slate-900'
                     }`}
                   >
-                    <div className="mb-1 text-xs font-semibold opacity-60">
-                      {message.role === 'user'
-                        ? 'You'
-                        : 'LogiMind AI'}
+                    <div
+                      className={`mb-1 text-xs font-semibold ${
+                        message.role === 'user'
+                          ? 'text-blue-100'
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      {message.role === 'user' ? 'You' : 'LogiMind AI'}
                     </div>
 
-                    <p className="whitespace-pre-wrap text-sm leading-6">
+                    <p className="whitespace-pre-wrap break-words text-sm leading-6">
                       {message.content}
                     </p>
                   </div>
@@ -187,36 +187,42 @@ const AIAssistant = () => {
 
               {loading && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl bg-slate-800 px-5 py-3 text-sm text-slate-400">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm font-medium text-slate-600">
                     LogiMind AI is thinking...
                   </div>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Input */}
-        <div className="mt-5 flex gap-3">
+        <form
+          className="mt-4 flex items-stretch gap-3"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void askAssistant()
+          }}
+        >
           <input
             type="text"
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Ask about your logistics data..."
+            aria-label="Ask LogiMind AI"
             disabled={loading}
-            className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-5 py-3 text-white outline-none placeholder:text-slate-500 focus:border-blue-500"
+            className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100 sm:px-5"
           />
 
           <button
-            onClick={askAssistant}
+            type="submit"
             disabled={loading || !input.trim()}
-            className="rounded-xl bg-blue-600 px-6 py-3 font-medium transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shrink-0 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600 sm:px-6"
           >
             {loading ? 'Asking...' : 'Ask AI'}
           </button>
-        </div>
-
+        </form>
       </div>
     </div>
   )
